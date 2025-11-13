@@ -79,11 +79,9 @@ class ProductOrderLine(models.Model):
         for line in self:
             unit_cost = getattr(line.product_id, 'standard_price', 0.0) or 0.0
 
-            # Only set invoice_price automatically if empty
             if not line.invoice_price:
                 line.invoice_price = (line.price_unit or 0.0) * (line.product_uom_qty or 0.0)
 
-            # Profit = invoice amount (revenue) - cost
             line.profit_price = (line.invoice_price or 0.0) - (unit_cost * (line.product_uom_qty or 0.0))
 
 

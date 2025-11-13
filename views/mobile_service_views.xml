@@ -84,25 +84,34 @@
                                 <field name="name" readonly="1"/>
                             </h1>
                         </div>
-                        <group>
-                            <group>
-                                <div style="text-align:center;">
-                                    <field name="image_medium"
-                                        widget="image"
-                                        class="oe_avatar"
-                                        options="{'preview_image': 'image_medium'}"
-                                        nolabel="1"
-                                        style="width:120px; height:120px; display:inline-block; margin-left:100px;"
-                                        modifiers="{'invisible': [('service_state','!=','draft')]}"/>
+                        <sheet>
+                            <div class="p-3">
+                                <div class="row">
+                                    <!-- Left Column: Info -->
+                                    <div class="col-8">
+                                        <group>
+                                            <field name="display_name_after_upload"
+                                                readonly="1"
+                                                string=""
+                                                modifiers="{'invisible': [('service_state','=','draft')]}"/>
+                                        </group>
+                                    </div>
 
-                                    <!-- Display Name shown only if service_state is NOT 'draft' -->
-                                    <div style="font-size:16px; font-weight:bold; margin-top:10px;"
-                                        modifiers="{'invisible': [('service_state','=','draft')]}">
-                                        <field name="display_name_after_upload"/>
+                                    <!-- Right Column: Image -->
+                                    <div class="col-4 text-center">
+                                        <field name="image_medium"
+                                            widget="image"
+                                            class="oe_avatar"
+                                            options="{'preview_image': 'image_medium'}"
+                                            nolabel="1"
+                                            modifiers="{'invisible': [('service_state','!=','draft')]}"/>
                                     </div>
                                 </div>
-                            </group>
-                        </group>
+                            </div>
+                        </sheet>
+
+
+
 
                            <div>
                                 <field name="is_in_warranty"
