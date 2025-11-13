@@ -34,7 +34,7 @@ class ProductOrderLine(models.Model):
     product_uom_qty = fields.Float(string='Used Quantity', default=1.0,
                                    help="Choose a quantity to use.",
                                    required=True)
-    price_unit = fields.Float(string='Unit Price', default=0.0, required=True,
+    price_unit = fields.Float(string='Standard Price', default=0.0, required=True,
                               help="Price of the product.")
     qty_invoiced = fields.Float(string='Invoiced Qty', readonly=True,
                                 help="Number of invoice created.")
@@ -46,10 +46,17 @@ class ProductOrderLine(models.Model):
     product_uom = fields.Char(string='Unit of Measure', required=True,
                               help="Unit of measure of the product.")
 
-    invoice_price = fields.Float(string='Invoice Price', compute='_compute_invoice_and_profit',
-                                 store=True, help="Total invoice/cost amount for this line (unit cost * qty)")
+    invoice_price = fields.Float(string='Invoice Price', compute='_compute_invoice_and_profit',inverse="_inverse_invoice_price",
+                                 store=True, help="Total invoice/cost amount for this line (unit cost * qty)", readonly=False)
     profit_price = fields.Float(string='Profit Price', compute='_compute_invoice_and_profit',
                                 store=True, help="Profit for this line: (sale amount - invoice amount)")
+
+    def _inverse_invoice_price(self):
+        """Allow manual edits of invoice_price and recalc profit"""
+        for line in self:
+            sale_total = (line.price_unit or 0.0) * (line.product_uom_qty or 0.0)
+            line.profit_price = sale_total - (line.invoice_price or 0.0)
+
 
     @api.onchange('product_id')
     def change_prod(self):
@@ -67,24 +74,20 @@ class ProductOrderLine(models.Model):
             price = line.price_unit * line.product_uom_qty
             line.update({'part_price': price})
 
-    @api.depends('product_uom_qty', 'product_id', 'price_unit')
+    @api.depends('product_uom_qty', 'price_unit', 'product_id', 'invoice_price')
     def _compute_invoice_and_profit(self):
-        """Compute invoice (cost) total and profit for the order line.
-
-        invoice_price = unit_cost * qty
-        profit_price = (price_unit * qty) - invoice_price
-        Unit cost is taken from product's standard_cost if available (standard_price on template/product).
-        """
         for line in self:
-            unit_cost = 0.0
-            if line.product_id:
-                # product.product may have standard_price; fallback to template
-                unit_cost = getattr(line.product_id, 'standard_price', 0.0) or getattr(
-                    line.product_id.product_tmpl_id, 'standard_price', 0.0) or 0.0
-            invoice_total = unit_cost * (line.product_uom_qty or 0.0)
-            sale_total = (line.price_unit or 0.0) * (line.product_uom_qty or 0.0)
-            line.invoice_price = invoice_total
-            line.profit_price = sale_total - invoice_total
+            unit_cost = getattr(line.product_id, 'standard_price', 0.0) or 0.0
+
+            # Only set invoice_price automatically if empty
+            if not line.invoice_price:
+                line.invoice_price = (line.price_unit or 0.0) * (line.product_uom_qty or 0.0)
+
+            # Profit = invoice amount (revenue) - cost
+            line.profit_price = (line.invoice_price or 0.0) - (unit_cost * (line.product_uom_qty or 0.0))
+
+
+
 
     def _create_stock_moves_transfer(self, picking):
         """It will return the stock moves"""
