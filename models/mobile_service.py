@@ -70,12 +70,7 @@ class MobileService(models.Model):
     model_name = fields.Many2one('brand.model', string="Model",
                                  domain="[('mobile_brand_name','=',brand_name)]"
                                  , help="Model name of the device.")
-    image_medium = fields.Image(
-                    string="Image",
-                    max_width=512,
-                    max_height=512,
-                    help="Upload an image for this device."
-                )
+    image_medium = fields.Binary('Image')
     display_name_after_upload = fields.Char(
         string="Display Name", compute="_compute_display_name_after_upload", store=True
     )

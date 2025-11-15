@@ -158,7 +158,7 @@
                                        readonly="service_state in ('returned','not_solved')"/>
                                 <field name="technician_name" style="width:50%;"
                                        readonly="service_state not in 'draft'"/>
-                    <field name="total_profit" readonly="1" string="Total Profit"/>
+                                <field name="total_profit" readonly="1" string="Total Profit"/>
                                 <field name="picking_count" invisible="1"/>
                             </group>
                         </group>
